@@ -7,7 +7,7 @@ def init():
         print("Enter name of your project :",end="")
         config["name"]=input()
 
-    data_dir=os.path.join(os.path.dirname(os.path.realpath(__file__)),"dart","data/*")
+    data_dir=os.path.join(os.path.dirname(os.path.realpath(__file__)),"dart","data/mvc_template")
     with open(os.path.join(os.getcwd(),".config"),'w') as f:
         f.write(str(config))
     os.system("flutter create "+os.path.join(os.getcwd(),config["name"]))
