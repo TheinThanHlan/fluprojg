@@ -1,4 +1,3 @@
-export './Routes.dart';
 export './MVCDatabaseProvider.dart';
 export './injection_container.dart';
 export './abstract/MVCController.dart';

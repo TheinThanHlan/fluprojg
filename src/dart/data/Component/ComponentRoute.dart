@@ -8,7 +8,17 @@ class ComponentRoute {
     builder: (context, state) {
       return getIt<ComponentPage>();
     },
-    path: "Component",
+
+    //this redirect act like route guard
+    //if you want to redirect your page to other places by condition decomment this
+    //redirect: (context, state) {
+    //  if (true) {
+    //    return null;
+    //  } else {
+    //    return null;
+    //  }
+    //},
+    path: "/Component",
     name: "Component Products",
   );
   /*
@@ -33,12 +43,15 @@ class ComponentRoute {
     ],*/
   late var route;
   ComponentRoute() {
-    route = ShellRoute(builder: ComponentNav, routes: [routeTree]);
+    //if you want to add static nav please add this
+    //builder is ComponentNav
+    //route = ShellRoute(builder: ComponentNav, routes: [routeTree]);
+
+    //if you want to create page without nav please un command this
+    //builder is ComponentPage
+    route = routeTree;
   }
 }
-
-
-
 
 /*
     ShellRoute(
