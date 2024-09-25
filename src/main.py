@@ -29,6 +29,8 @@ def main():
                 
             case "com":
                 component_template.generate()            
+            case "page":
+                component_template.generate()            
     
             case _:
                 helper()

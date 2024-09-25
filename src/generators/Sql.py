@@ -1,3 +1,4 @@
+from enum import unique
 import os,pathlib
 from TypeConfig import mapType,types
 
@@ -23,10 +24,10 @@ class Column:
         foreignKey_str=""
         column_type=mapType(self.dataType,"sqlite")
         if self.foreignKey!=None:
-            foreignKey_str=f"REFERENCES {self.foreignKey['classname']}({self.foreignKey['primaryKey']['name']})"
+            foreignKey_str=f"REFERENCES '{self.foreignKey['classname']}'('{self.foreignKey['primaryKey']['name']}')"
             column_type=mapType(self.foreignKey["primaryKey"]["type"],"sqlite")
         sqlDefaultValue=types[self.dataType].langs['sqlite'].defaultValue if 'primary key' not in self.constraints.lower() and 'not null' in self.constraints.lower() and self.dataType in types.keys() else ''
-        return f"{self.name} {column_type} {self.constraints} {foreignKey_str} {'Default 'if sqlDefaultValue!='' else ''}  {sqlDefaultValue}  "
+        return f"'{self.name}' {column_type} {self.constraints} {foreignKey_str} {'Default 'if sqlDefaultValue!='' else ''}  {sqlDefaultValue}  "
 
 class Table:
     def __init__(self,name="",unique_constraints=[],primary_keys=[]):
@@ -41,11 +42,20 @@ class Table:
         self.columns.append(column)
         
     def __repr__(self):
-        table_create_str="CREATE TABLE IF NOT EXISTS "+self.name+"(\n"   
+        table_create_str="CREATE TABLE IF NOT EXISTS '"+self.name+"'(\n"   
         #create column
         column_str_list=[str(a) for a in self.columns]
         #create unique constraints str
-        unique_constraints_str=",".join([f"UNIQUE( {','.join(a)} )" for a in self.unique_constraints])
+        unique_constraints=[] #",".join([f"UNIQUE( {','.join([+b+"'" for b in a ])} )" for a in self.unique_constraints])
+        for a in self.unique_constraints:
+            tmp=[]
+            for b in a:
+                tmp.append("'"+b+"'")
+            unique_constraints.append(tmp)
+
+        unique_constraints_str=",".join([f"UNIQUE( {','.join(a)} )" for a in unique_constraints])
+
+
         if unique_constraints_str!="":
             column_str_list.append(unique_constraints_str)
         #add to table create str

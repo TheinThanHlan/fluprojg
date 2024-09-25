@@ -4,12 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'mvc_template/all.dart';
 
 void main() {
-  init();
-
-  getIt.allReady().then((x) {
-    MaterialApp mainApp = MaterialApp.router(
-      useInheritedMediaQuery: true,
-      routerConfig: getIt<GoRouter>(),
+  init().then((x) {
+    MaterialApp mainApp = MaterialApp(
+      home:#,
+      useInheritedMediaQuery:true,
     );
 
     //run App

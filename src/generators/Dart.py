@@ -57,7 +57,6 @@ class Class:
         class_str+="\n}\n"
         return class_str
 
-
     #create class for dao that include auto generated CURD
     def generatedDao(self):
         class_str=f"import 'package:sqflite/sqflite.dart';\nimport '../../all.dart';\nabstract class {self.name}GeneratedDao implements IMVCDao<{self.name}>{{ \n\t"
@@ -85,21 +84,26 @@ class Class:
 
 
         #delete
-        method+=f"\nvoid delete({pk_type} id){{\n"
-        method+=f"\nthis.db.delete(\"{self.name}\",where:\"{pk_name}=$id\");"
+        method+=f"\nFuture<void> delete({pk_type} id)async{{\n"
+        method+=f"\nawait this.db.delete(\"{self.name}\",where:\"{pk_name}=$id\");"
         method+="\n}\n"
 
 
         #method+="\nvoid update(){}"
-        
+        #read by id
         method+=f"\nFuture<{self.name}?> read({pk_type} id)async{{"
         method+=f"List t =await db.query(\"{self.name}\", where: \"{pk_name}=$id\");\n"
         method+=f"if (t.length == 1) {{\n"
         method+=f"return {self.name}.fromJson(t[0]);\n"
         method+="}"
         method+=f"return null;"
-        method+="}"
+        method+="}\n"
 
+        #read all
+        method+=f"Future<List<{self.name}>> readAll() async {{"
+        method+=f"List tmp = await db.query(\"{self.name}\");"
+        method+=f"return tmp.map((value) => {self.name}.fromJson(value)).toList();"
+        method+="\n}\n"
 
         class_str+=method
         class_str+="\n}\n"
@@ -131,6 +135,7 @@ class Dart:
     
     def generate(self):
         self.generateExports()
+        self.generateInjects()
         for a in self.data.keys():
             if "#_#_#" not in a:
                 ac=Class(name=a,variables=self.data[a]["variables"])
@@ -152,20 +157,30 @@ class Dart:
 
 
 
-
     def generateExports(self):
         exports=[]
         exportFormat="export './{class_dir}.dart';"
 
-        #generate for model
+        #generate exports
         exports=[exportFormat.format(class_dir=os.path.join("generated","model",a)) for a in self.data.keys() if "#_#_#" not in a]
         exports+=[exportFormat.format(class_dir=os.path.join("generated","dao",a+"GeneratedDao")) for a in self.data.keys() if "#_#_#" not in a]
         exports+=[exportFormat.format(class_dir=os.path.join("dao",a+"Dao")) for a in self.data.keys() if "#_#_#" not in a]
         exports.append("\nexport '../mvc_template/all.dart';")
+        
 
         print("\n[dart]")
         with open(os.path.join(self.data_dir,'all.dart'),'w') as f:
             f.write("\n".join(exports))
         print(f"\t~=> \"data/generated/all.dart\"")
+
+
+    def generateInjects(self):
+        #generate injections
+        INJECT="getIt.registerSingleton({class_name}());"
+        inject_function="import '../mvc_template/all.dart';\nimport './all.dart';\nimport 'package:get_it/get_it.dart';\nvoid injectData(GetIt getIt){"
+        inject_function+="\n".join([ INJECT.format(class_name=a+"Dao") for a in self.data.keys() if "#_#_#" not in a])
+        inject_function+="}"
+        with open(os.path.join(self.data_dir,"InjectData.dart"),"w") as f:
+            f.write(inject_function);
 
 
