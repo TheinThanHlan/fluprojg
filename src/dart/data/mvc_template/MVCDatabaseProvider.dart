@@ -22,8 +22,8 @@ class MVCDatabaseProvider {
 
     if (Platform.isWindows || Platform.isLinux) {
       sqfliteFfiInit();
+      databaseFactory = databaseFactoryFfi;
     }
-    databaseFactory = databaseFactoryFfi;
 
     String db_path = join(await getDatabasesPath(), _dbName);
     print(db_path);
