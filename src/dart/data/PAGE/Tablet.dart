@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import '../../mvc_template/all.dart';
 import './PAGEController.dart';
 
-class Mobile extends StatelessWidget {
+class Tablet extends StatelessWidget {
   late final PAGEController controller;
-  Mobile({required this.controller});
+  Tablet({required this.controller});
 
   Widget build(BuildContext context) {
     return Text(controller.greet);
@@ -12,11 +12,11 @@ class Mobile extends StatelessWidget {
 
 //  State<StatefulWidget> createState() {
 //    // TODO: implement createState
-//    return _Mobile();
+//    return _Tablet();
 //  }
 }
 
-//class _Mobile extends State<Mobile> {
+//class _Tablet extends State<Tablet> {
 //  @override
 //  Widget build(BuildContext context) {
 //    // TODO: implement build

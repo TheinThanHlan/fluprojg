@@ -30,6 +30,8 @@ class MVCDatabaseProvider {
     _db =
         await openDatabase(db_path, version: _version, onCreate: (db, version) {
       db.execute(_sql_create_schema);
+    }, onConfigure: (Database db) async {
+      await db.execute("PRAGMA foreign_keys = ON");
     });
     return _db;
   }

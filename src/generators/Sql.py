@@ -5,12 +5,12 @@ from TypeConfig import mapType,types
 
 class Column:
     constraint_list=["not null", "unique", "primary key"]
-    
+
     def __init__(self,name,dataType,constraints,foreignKey=None):
         self.name=name
         self.dataType=dataType
         self.constraints=constraints
-        
+
         #foreign key must be map of
         #{
         #   classname=""
@@ -35,14 +35,14 @@ class Table:
         self.unique_constraints=unique_constraints
         self.primary_keys=primary_keys
         self.columns=[]
-    
+
 
 
     def addColumn(self,column):
         self.columns.append(column)
-        
+
     def __repr__(self):
-        table_create_str="CREATE TABLE IF NOT EXISTS '"+self.name+"'(\n"   
+        table_create_str="CREATE TABLE IF NOT EXISTS '"+self.name+"'(\n"
         #create column
         column_str_list=[str(a) for a in self.columns]
         #create unique constraints str
@@ -63,7 +63,7 @@ class Table:
         return  table_create_str
 
 
-    
+
 
 class Sql:
     save_dir=""
@@ -71,27 +71,28 @@ class Sql:
         self.save_dir=os.path.join(os.getcwd(),config["name"],"assets/databases")
         pathlib.Path(self.save_dir).mkdir(exist_ok=True,parents=True)
         self.data=data
-    
+
     def generate(self):
         print("\n[sqllite]")
         tables=[]
         for a in self.data.keys():
-            tmp=Table(name=a.replace("#_#_#",""),unique_constraints=self.data[a]["unique_constraints"]) 
+            tmp=Table(name=a,unique_constraints=self.data[a]["unique_constraints"])
             primaryKey=None
+            print(a)
             for b in self.data[a]["variables"]:
                 foreignKey=None
                 if "primary key" in b["constraints"].lower():
                     primaryKey=b
-                    
+
                 elif b["map"].lower() in ["onetoone","manytoone"]:
                     foreignKey={
                         'classname':b["type"] if b["type"] in self.data.keys() else None,
                         'primaryKey':[abc for abc in self.data[b['type']]['variables'] if "primary key" in abc["constraints"].lower()][0]
                     }
-                    
+
                     if foreignKey["classname"]==None:
                         raise Exception("there is no table name :"+b["type"]+" in "+"a")
-                    
+
                     if 'primaryKey'==None:
                         raise Exception("there is no primary key in table name : "+b["type"]+";\nPlease add primary key constraints")
 
@@ -101,19 +102,19 @@ class Sql:
 
                 elif b["map"].lower() in ["manytomany","onetomany"]:
                     continue
-                
+
 
 
                 tmp.addColumn(
                     Column(name=b['name'],dataType=b['type'],constraints=b['constraints'],foreignKey=foreignKey)
                 )
 
-                
+
 
             tables.append(tmp)
             print(f"\t~=> \"{tmp.name}\"")
-    
+
         with open(os.path.join(self.save_dir,"database.sql"),"w") as f:
             f.write("\n".join([str(a) for a in tables]));
-            
+
         print(f"\t~=> \"assets/database.sql\"")

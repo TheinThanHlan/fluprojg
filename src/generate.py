@@ -9,7 +9,7 @@ def generate():
     config={}
     with open(os.path.join(".config"),"r") as f:
         config=eval(f.read())
-    
+
     for a in input_files:
         print(a)
         with open(os.path.join("input",a),"r") as f:
@@ -33,7 +33,7 @@ def addMappedBy(data):
                 bMappedBy=b['name']
                 btype=b['type']
                 bTypeUse=""
-                bMapName="auto"
+                bMapName=""
                 match b['map'].lower():
                     case "manytoone":
                         bRelation="OneToMany"
@@ -45,24 +45,24 @@ def addMappedBy(data):
                         btype=btype.replace("List","").replace("<","").replace(">","")
                         bTypeUse=f"List<{a}>"
                         bMapName+="ListOf"
-                    
+
                     case "onetomany":
                         bRelation="ManyToOne"
                         btype=btype.replace("List","").replace("<","").replace(">","")
                         bTypeUse=a
                         bMappedBy=""
                         bMapName+=""
-                        
-                
+
+
                 #get the name of variable in a class as a list
                 bvar_name_list=[c['name'] for c in data[btype]["variables"]]
-                bMapName+=a;
+                bMapName+=a+"_mappedBy_"+b["name"]
                 #create a unique variable name for many to many
-                c=1
-                while bMapName in bvar_name_list:
-                    bMapName+="_"+str(c)
-                    c+=1
-                
+                #c=1
+                #while bMapName in bvar_name_list:
+                #    bMapName+="_"+str(c)
+                #    c+=1
+
                 if b['map'].lower()=="onetomany":
                     b["mappedBy"]=bMapName.replace("#_#_#","")
 
@@ -72,10 +72,10 @@ def addMappedBy(data):
                     "default_value": "",
                     "optional":True,                #is optional in dart constructor
                     "constraints":"",
-                    "map":bRelation,                       # OneToOne , ManyToOne , ManyToMany 
+                    "map":bRelation,                       # OneToOne , ManyToOne , ManyToMany
                     "mappedBy":bMappedBy,                  # name of variable that is mapped.ManyToMany needs mappedBy
                     "dbAutoValue":False,
-                }   
+                }
                 data[btype]['variables'].append(bTemplate)
     for a in data.keys():
         i=0
@@ -89,10 +89,10 @@ def addJunctionClass(data):
     tmp_data={}
     for a in data.keys():
         for b in data[a]["variables"]:
-            if b["map"].lower() == "manytomany" and b.get("mappedBy")=='':
+            if b["map"].lower() == "manytomany" and b.get("mappedBy","")=='':
                 bOwnerType=a
-                bNonOwnerType=b['type'].replace("list","").replace("<","").replace(">","")
-                tableName="#_#_#"+bOwnerType+bNonOwnerType
+                bNonOwnerType=b['type'].replace("List","").replace("<","").replace(">","")
+                tableName="#_#_#"+bOwnerType+"_"+bNonOwnerType
                 #get the name of variable in a class as a list
                 #create a unique variable name for many to many
                 c=0;
@@ -102,7 +102,7 @@ def addJunctionClass(data):
 
                 tmp_data[tableName]={
                         "unique_constraints": [
-                            
+
                         ],
                         "variables": [
                             {
@@ -124,10 +124,13 @@ def addJunctionClass(data):
                                 "mappedBy":"",
                             },
                         ],
-                                            
+                        "unique_constraints": [
+                            [bOwnerType[0].lower()+bOwnerType[1:]+"Id",bNonOwnerType[0].lower()+bNonOwnerType[1:]+"Id"]
+                        ],
+
                     }
 
 
     data={**data,**tmp_data}
+    print(tmp_data)
     return data
-

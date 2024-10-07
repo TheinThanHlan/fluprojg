@@ -3,6 +3,7 @@ import '../../mvc_template/all.dart';
 import './PAGEController.dart';
 import './Mobile.dart';
 import './Desktop.dart';
+import './Tablet.dart';
 
 class PAGEPage extends StatelessWidget implements IMVCView {
   late final PAGEController controller;
@@ -11,6 +12,7 @@ class PAGEPage extends StatelessWidget implements IMVCView {
     return responsiveLayout(
         context: context,
         desktop: Desktop(controller: controller),
-        mobile: Mobile(controller: controller));
+        mobile: Mobile(controller: controller),
+        tablet: Tablet(controller: controller));
   }
 }

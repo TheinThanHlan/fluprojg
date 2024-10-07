@@ -8,33 +8,33 @@ class Class:
 
     def model(self):
         class_str=f"import '../../all.dart';\nclass {self.name} implements IMVCModel{{ \n\t"
-        
-        #create variable 
+
+        #create variable
         assign_variable_str="\n\t".join([
-           f"{'late' if a['optional']!=True and a['default_value']=='' else '' } {mapType(a['type'],'dart')}{'?' if a['optional']==True else ''} {a['name']}{'='if a['default_value'] !='' else ''}{a['default_value']};".strip() for a in self.variables 
+           f"{'late' if a['optional']!=True and a['default_value']=='' else '' } {mapType(a['type'],'dart')}{'?' if a['optional']==True else ''} {a['name']}{'='if a['default_value'] !='' else ''}{a['default_value']};".strip() for a in self.variables
         ])
         class_str+=assign_variable_str
-    
+
         #create constructor
         constructor_assign_str=",".join([f"{'required' if a['optional']==False else ''} {'this.'+a['name']}" for a in self.variables])
         constructor_str=f"{self.name}({{{constructor_assign_str}}});"
         class_str+="\n\t"+constructor_str
 
-        
+
         #create toJson method
         method_toJson_str="Map<String, dynamic> toJson() => {"
         method_toJson_str+=",".join([f"\"{a['name']}\":{a['name']}" for a in self.variables])
         method_toJson_str+="};"
         class_str+="\n\t"+method_toJson_str
-        
+
 
         #create toJson without db_auto
         method_toJson_str="Map<String, dynamic> toJsonWithoutDbAuto() => {"
-        method_toJson_str+=",".join([ f"\"{a['name']}\":{a['name']}"  for a in self.variables if a['dbAutoValue']==False and a['map']==''] ) 
+        method_toJson_str+=",".join([ f"\"{a['name']}\":{a['name']}"  for a in self.variables if a['dbAutoValue']==False and a['map']==''] )
         method_toJson_str+="};"
-        
+
         class_str+="\n\t"+method_toJson_str
-        
+
         #create fromJson method
         method_fromJson_str=f"{self.name}.fromJson(Map<String,dynamic> data): "
         _tmp_list=[]
@@ -42,10 +42,15 @@ class Class:
             _tmp_str=f"{a['name']}="
             _tmp_str+= types.get(a['type'],TypeMapping(langs={'dart':DataType()})).langs['dart'].fromJsonFunction.format(value=f"data[\"{a['name']}\"]")
             _tmp_list.append(_tmp_str)
-            
+
         method_fromJson_str+=",".join(_tmp_list)
         method_fromJson_str+=";\n"
         class_str+="\n\t"+method_fromJson_str
+
+        method_clone=f"{self.name} clone(){{"
+        method_clone+=f"return {self.name}.fromJson(this.toJson());"
+        method_clone+="}"
+        class_str+="\n\t"+method_clone
 
         class_str+="\n}\n"
         return class_str
@@ -64,17 +69,17 @@ class Class:
         method=""
 
         #insert
-        method+=f"\nvoid insert({self.name} data){{\n"
-        method+=f"\tthis.db.insert(\"{self.name}\",data.toJson());"
+        method+=f"\nFuture<int> insert({self.name} data){{\n"
+        method+=f"\treturn this.db.insert(\"{self.name}\",data.toJson());"
         method+="\n}\n"
 
         #insert without db auto
-        method+=f"\nvoid insertWithoutDbAuto({self.name} data){{"
-        method+=f"this.db.insert(\"{self.name}\",data.toJsonWithoutDbAuto());"
+        method+=f"\nFuture<int> insertWithoutDbAuto({self.name} data){{"
+        method+=f"return this.db.insert(\"{self.name}\",data.toJsonWithoutDbAuto());"
         method+="\n}\n"
 
 
-        
+
         pk_type=""
         pk_name=""
         for a in self.variables:
@@ -105,6 +110,23 @@ class Class:
         method+=f"return tmp.map((value) => {self.name}.fromJson(value)).toList();"
         method+="\n}\n"
 
+
+        for a in self.variables:
+            if(a["map"].strip()=="" and 'primary key' not in a['constraints'].lower()):
+                method+=f"Future<List<{self.name}>> searchWith_{a['name']}({mapType(a['type'],'dart')} {a['name']}) async {{"
+                if(a['type']!="String" and a['type']!="char"):
+                    method+=f"List tmp=await db.query('{self.name}',where:\"{a['name']}=${a['name']}\");"
+                else:
+                    method+=f"List tmp=await db.query('{self.name}',where:\"{a['name']}=\\\"${a['name']}\\\"\");"
+
+                method +=f"return tmp.map((value)=>{self.name}.fromJson(value)).toList();"
+                method+="\n}\n"
+
+
+
+
+
+
         class_str+=method
         class_str+="\n}\n"
         return class_str
@@ -117,11 +139,11 @@ class Class:
 class Dart:
     def __init__(self,data,config):
         self.save_dir=os.path.join(os.getcwd(),config["name"],"lib")
-        
+
         self.data_dir=os.path.join(self.save_dir,"data")
         self.model_dir=os.path.join(self.data_dir,"generated","model")
         self.dao_dir=os.path.join(self.data_dir,"generated","dao")
-    
+
         self.custom_dao_dir=os.path.join(self.data_dir,"dao")
 
         #create path
@@ -129,10 +151,10 @@ class Dart:
         pathlib.Path(self.model_dir).mkdir(exist_ok=True,parents=True)
         pathlib.Path(self.dao_dir).mkdir(exist_ok=True,parents=True)
         pathlib.Path(self.custom_dao_dir).mkdir(exist_ok=True,parents=True)
-        
+
         self.data=data
         self.config=config
-    
+
     def generate(self):
         self.generateExports()
         self.generateInjects()
@@ -142,11 +164,11 @@ class Dart:
                 with open(os.path.join(self.model_dir,a+".dart"),"w") as f:
                     f.write(ac.model())
                 print(f"\t~=> \"data/generated/model/{a}.dart")
-                
+
                 with open(os.path.join(self.dao_dir,a+"GeneratedDao.dart"),"w") as f:
                     f.write(ac.generatedDao())
                 print(f"\t~=> \"data/generated/dao/{a}GeneratedDao.dart\"")
-                
+
                 if not os.path.isfile(os.path.join(self.custom_dao_dir,a+"Dao.dart")):
                     with open(os.path.join(self.custom_dao_dir,a+"Dao.dart"),"w") as f:
                         f.write(ac.dao())
@@ -166,7 +188,7 @@ class Dart:
         exports+=[exportFormat.format(class_dir=os.path.join("generated","dao",a+"GeneratedDao")) for a in self.data.keys() if "#_#_#" not in a]
         exports+=[exportFormat.format(class_dir=os.path.join("dao",a+"Dao")) for a in self.data.keys() if "#_#_#" not in a]
         exports.append("\nexport '../mvc_template/all.dart';")
-        
+
 
         print("\n[dart]")
         with open(os.path.join(self.data_dir,'all.dart'),'w') as f:
@@ -182,5 +204,3 @@ class Dart:
         inject_function+="}"
         with open(os.path.join(self.data_dir,"InjectData.dart"),"w") as f:
             f.write(inject_function);
-
-
