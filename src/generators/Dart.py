@@ -110,9 +110,9 @@ class Class:
         method+=f"return tmp.map((value) => {self.name}.fromJson(value)).toList();"
         method+="\n}\n"
 
-
+        #produce searchWith_ method
         for a in self.variables:
-            if(a["map"].strip()=="" and 'primary key' not in a['constraints'].lower()):
+            if(a["map"].strip()=="" and 'primary key' not in a['constraints'].lower() ):
                 method+=f"Future<List<{self.name}>> searchWith_{a['name']}({mapType(a['type'],'dart')} {a['name']}) async {{"
                 if(a['type']!="String" and a['type']!="char"):
                     method+=f"List tmp=await db.query('{self.name}',where:\"{a['name']}=${a['name']}\");"
@@ -122,6 +122,14 @@ class Class:
                 method +=f"return tmp.map((value)=>{self.name}.fromJson(value)).toList();"
                 method+="\n}\n"
 
+        #produce searchWith_#_like method
+        for a in self.variables:
+            if(a["map"].strip()=="" and 'primary key' not in a['constraints'].lower() and 'not null' in a['constraints'].lower()):
+                if(a['type']=="String"):
+                    method+=f"Future<List<{self.name}>> searchWith_{a['name']}_like({mapType(a['type'],'dart')} {a['name']}) async {{"
+                    method+=f"List tmp=await db.query('{self.name}',where:\"{a['name']} like \\\"%${a['name']}%\\\"\");"
+                    method +=f"return tmp.map((value)=>{self.name}.fromJson(value)).toList();"
+                    method+="\n}\n"
 
 
 
@@ -161,18 +169,18 @@ class Dart:
         for a in self.data.keys():
             if "#_#_#" not in a:
                 ac=Class(name=a,variables=self.data[a]["variables"])
+                print(f"\t~=> \"data/generated/model/{a}.dart")
                 with open(os.path.join(self.model_dir,a+".dart"),"w") as f:
                     f.write(ac.model())
-                print(f"\t~=> \"data/generated/model/{a}.dart")
 
+                print(f"\t~=> \"data/generated/dao/{a}GeneratedDao.dart\"")
                 with open(os.path.join(self.dao_dir,a+"GeneratedDao.dart"),"w") as f:
                     f.write(ac.generatedDao())
-                print(f"\t~=> \"data/generated/dao/{a}GeneratedDao.dart\"")
 
                 if not os.path.isfile(os.path.join(self.custom_dao_dir,a+"Dao.dart")):
+                    print(f"\t~=> \"data/dao/{a}Dao.dart\";")
                     with open(os.path.join(self.custom_dao_dir,a+"Dao.dart"),"w") as f:
                         f.write(ac.dao())
-                    print(f"\t~=> \"data/dao/{a}Dao.dart\";")
 
 
 
@@ -191,9 +199,9 @@ class Dart:
 
 
         print("\n[dart]")
+        print(f"\t~=> \"data/generated/all.dart\"")
         with open(os.path.join(self.data_dir,'all.dart'),'w') as f:
             f.write("\n".join(exports))
-        print(f"\t~=> \"data/generated/all.dart\"")
 
 
     def generateInjects(self):

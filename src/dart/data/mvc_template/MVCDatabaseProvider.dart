@@ -16,8 +16,9 @@ class MVCDatabaseProvider {
   Future<Database> getDatabase() async {
     _dbName = "database.db";
     //   jsonDecode(await rootBundle.loadString("assets/global.json"))["name"];
-
     _sql_create_schema =
+        await rootBundle.loadString("assets/databases/databaseGenerated.sql");
+    _sql_create_schema +=
         await rootBundle.loadString("assets/databases/database.sql");
 
     if (Platform.isWindows || Platform.isLinux) {

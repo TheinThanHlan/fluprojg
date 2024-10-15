@@ -114,7 +114,9 @@ class Sql:
             tables.append(tmp)
             print(f"\t~=> \"{tmp.name}\"")
 
-        with open(os.path.join(self.save_dir,"database.sql"),"w") as f:
+        with open(os.path.join(self.save_dir,"databaseGenerated.sql"),"w") as f:
             f.write("\n".join([str(a) for a in tables]));
+
+        pathlib.Path(os.path.join(self.save_dir,"database.sql")).touch(exist_ok=True)
 
         print(f"\t~=> \"assets/database.sql\"")

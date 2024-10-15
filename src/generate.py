@@ -132,5 +132,5 @@ def addJunctionClass(data):
 
 
     data={**data,**tmp_data}
-    print(tmp_data)
+    #print(tmp_data)
     return data
