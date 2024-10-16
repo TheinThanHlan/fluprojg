@@ -30,11 +30,12 @@ class Column:
         return f"'{self.name}' {column_type} {self.constraints} {foreignKey_str} {'Default 'if sqlDefaultValue!='' else ''}  {sqlDefaultValue}  "
 
 class Table:
-    def __init__(self,name="",unique_constraints=[],primary_keys=[]):
+    def __init__(self,name="",unique_constraints=[],primary_keys=[],check_constraints={}):
         self.name=name
         self.unique_constraints=unique_constraints
         self.primary_keys=primary_keys
         self.columns=[]
+        self.check_constraints=check_constraints
 
 
 
@@ -54,10 +55,20 @@ class Table:
             unique_constraints.append(tmp)
 
         unique_constraints_str=",".join([f"UNIQUE( {','.join(a)} )" for a in unique_constraints])
-
-
         if unique_constraints_str!="":
             column_str_list.append(unique_constraints_str)
+
+        #create check constraints str
+        check_constraints=[]
+        for a in self.check_constraints.keys():
+            tmp=f"Constraint {a} Check({self.check_constraints.get(a)})"
+            check_constraints.append(tmp)
+        check_constraints_str=",".join(check_constraints)
+        if check_constraints_str!="":
+            column_str_list.append(check_constraints_str)
+
+
+
         #add to table create str
         table_create_str+=",\n".join(column_str_list)+"\n);"
         return  table_create_str
@@ -76,7 +87,7 @@ class Sql:
         print("\n[sqllite]")
         tables=[]
         for a in self.data.keys():
-            tmp=Table(name=a,unique_constraints=self.data[a]["unique_constraints"])
+            tmp=Table(name=a,unique_constraints=self.data[a].get("unique_constraints",[]),check_constraints=self.data[a].get("check_constraints",{}))
             primaryKey=None
             print(a)
             for b in self.data[a]["variables"]:

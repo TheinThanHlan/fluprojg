@@ -1,6 +1,6 @@
 # File name is used as class Name and Table name
 # Naming rules are same as java naming rules
-# supported types are - 
+# supported types are -
 # java premitive types and DateTime , String , List<> , Map<>
 #
 #
@@ -14,6 +14,9 @@
         #["a","b"],
         #["c"]
     ],
+    "check_constraints":{
+        #"check_constraint_name" : "check constraint value"
+    },
     #variables
     "variables": [
 
@@ -25,7 +28,7 @@
             "default_value": 0,
             "optional":True,                #is optional in dart constructor
             "constraints":"not null primary key",
-            "dbAutoValue":True,                 #use the db default value 
+            "dbAutoValue":True,                 #use the db default value
             "map":"",
         },
         {
@@ -34,10 +37,9 @@
             "default_value": "",
             "optional":True,                #is optional in dart constructor
             "constraints":"not null",
-            "dbAutoValue":True,                 #use the db default value 
-            "map":"",                       # OneToOne , ManyToOne , ManyToMany 
+            "dbAutoValue":True,                 #use the db default value
+            "map":"",                       # OneToOne , ManyToOne , ManyToMany
         },
     ],
 
 }
-
